@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"enigma-lms/model"
+	"time"
 )
 
 /*
@@ -15,6 +16,8 @@ import (
 
 type UserRepository interface {
 	Get(id string) (model.User, error)
+	Create(payload model.User) (model.User, error)
+	GetAll() ([]model.User, error)
 }
 
 type userRepository struct {
@@ -40,6 +43,69 @@ func (u *userRepository) Get(id string) (model.User, error) {
 		return model.User{}, err
 	}
 	return user, nil
+}
+
+func (e *userRepository) Create(payload model.User) (model.User, error) {
+	var user model.User
+	err := e.db.QueryRow(`INSERT INTO users (first_name, last_name, email, username, password, role, photo, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, first_name, last_name, email, username, password, role, photo, created_at, updated_at`,
+		payload.FirstName,
+		payload.LastName,
+		payload.Email,
+		payload.Username,
+		payload.Password,
+		payload.Role,
+		payload.Photo,
+		time.Now(),
+	).Scan(
+		&user.Id,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.Role,
+		&user.Photo,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
+func (u *userRepository) GetAll() ([]model.User, error) {
+	var users []model.User
+	rows, err := u.db.Query(`SELECT id, first_name, last_name, email, username, role, photo, created_at, updated_at FROM users`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user model.User
+		err := rows.Scan(
+			&user.Id,
+			&user.FirstName,
+			&user.LastName,
+			&user.Email,
+			&user.Username,
+			&user.Role,
+			&user.Photo,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 func NewUserRepository(db *sql.DB) UserRepository {
