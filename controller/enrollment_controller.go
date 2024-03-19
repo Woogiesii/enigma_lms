@@ -3,6 +3,7 @@ package controller
 import (
 	"enigma-lms/model/dto"
 	"enigma-lms/usecase"
+	"enigma-lms/utils/common"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,26 +17,17 @@ type EnrollmentController struct {
 func (e *EnrollmentController) createHandler(ctx *gin.Context) {
 	var payload dto.EnrollmentRequestDto
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"code":        http.StatusBadRequest,
-			"description": err.Error(),
-		})
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 	payloadResponse, err := e.uc.RegisterNewEnrollment(payload)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":        http.StatusInternalServerError,
-			"description": err.Error(),
-		})
+		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{
-		"code":        http.StatusCreated,
-		"description": "OK",
-		"data":        payloadResponse,
-	})
+
+	common.SendCreateResponse(ctx, "OK", payloadResponse)
 }
 
 func (e *EnrollmentController) Route() {

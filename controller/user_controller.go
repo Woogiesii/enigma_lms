@@ -3,6 +3,7 @@ package controller
 import (
 	"enigma-lms/model/dto"
 	"enigma-lms/usecase"
+	"enigma-lms/utils/common"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,42 +18,26 @@ func (e *UserController) getHandler(ctx *gin.Context) {
 	id := ctx.Param("id")
 	response, err := e.uc.FindById(id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"Code":        http.StatusInternalServerError,
-			"description": err.Error(),
-		})
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":        http.StatusOK,
-		"description": "OK",
-		"data":        response,
-	})
+	common.SendCreateResponse(ctx, "OK", response)
 }
 
 func (e *UserController) createHandler(ctx *gin.Context) {
 	var payload dto.UserRequestDto
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"code":        http.StatusBadRequest,
-			"description": err.Error(),
-		})
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 	payloadResponse, err := e.uc.CreateUser(payload)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":        http.StatusInternalServerError,
-			"description": err.Error(),
-		})
+		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"code":        http.StatusCreated,
-		"description": "OK",
-		"data":        payloadResponse,
-	})
+	common.SendCreateResponse(ctx, "OK", payloadResponse)
 }
 
 func (e *UserController) getAllUsersHandler(ctx *gin.Context) {
