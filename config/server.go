@@ -14,6 +14,7 @@ import (
 type Server struct {
 	uc     usecase.UserUseCase
 	cs     usecase.CourseUseCase
+	ec     usecase.EnrollmentUseCase
 	engine *gin.Engine
 	host   string
 }
@@ -22,6 +23,7 @@ func (s *Server) setupControllers() {
 	rg := s.engine.Group("/api/v1")
 	controller.NewUserController(s.uc, rg).Route()
 	controller.NewCourseController(s.cs, rg).Route()
+	controller.NewEnrollmentController(s.ec, rg).Route()
 }
 
 func (s *Server) Run() {
@@ -49,6 +51,8 @@ func NewServer() *Server {
 	userUc := usecase.NewUserUseCase(userRepo)
 	courseRepo := repository.NewCourseRepository(db)
 	courseUc := usecase.NewCourseUseCase(courseRepo)
+	enrollRepo := repository.NewEnrollmentRepository(db)
+	enrollUc := usecase.NewEnrollmentUseCase(enrollRepo, userUc, courseUc)
 
 	engine := gin.Default()
 	apiHost := fmt.Sprintf(":%s", "8081")
@@ -56,6 +60,7 @@ func NewServer() *Server {
 	return &Server{
 		uc:     userUc,
 		cs:     courseUc,
+		ec:     enrollUc,
 		engine: engine,
 		host:   apiHost,
 	}

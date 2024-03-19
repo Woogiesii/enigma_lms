@@ -5,6 +5,7 @@ import (
 	"enigma-lms/model/dto"
 	"enigma-lms/repository"
 	"fmt"
+	"time"
 )
 
 type CourseUseCase interface {
@@ -25,13 +26,23 @@ func (cs *courseUseCase) FindById(id string) (model.Course, error) {
 }
 
 func (cs *courseUseCase) CreateCourse(payload dto.CourseRequestDto) (model.Course, error) {
+	startDate, err := time.Parse("2006-01-02", payload.CourseStartDate)
+	if err != nil {
+		return model.Course{}, fmt.Errorf("failed to parse CourseStartDate: %s", err.Error())
+	}
+
+	endDate, err := time.Parse("2006-01-02", payload.CourseEndDate)
+	if err != nil {
+		return model.Course{}, fmt.Errorf("failed to parse CourseEndDate: %s", err.Error())
+	}
+
 	newCourse := model.Course{
 		Id:              payload.Id,
 		CourseFullName:  payload.CourseFullName,
 		CourseShortName: payload.CourseShortName,
 		Description:     payload.Description,
-		CourseStartDate: payload.CourseStartDate,
-		CourseEndDate:   payload.CourseEndDate,
+		CourseStartDate: startDate,
+		CourseEndDate:   endDate,
 		CourseImage:     payload.CourseImage,
 	}
 
