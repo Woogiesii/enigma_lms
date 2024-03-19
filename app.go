@@ -1,8 +1,9 @@
 package main
 
-import "enigma-lms/config"
+import (
+	"enigma-lms/server"
+)
 
 func main() {
-	server := config.NewServer()
-	server.Run()
+	server.NewServer().Run()
 }
