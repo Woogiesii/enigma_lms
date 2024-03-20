@@ -75,8 +75,8 @@ func (e *UserController) getAllUsersHandler(ctx *gin.Context) {
 func (e *UserController) Route() {
 	userGroup := e.rg.Group("/users")
 	{
-		userGroup.GET("/:id", e.getHandler) // GET BY ID
-		userGroup.POST("", e.createHandler) //CREATE USERS
+		userGroup.GET("/:id", common.JWTAuth("ADMIN", "USER"), e.getHandler) // GET BY ID
+		userGroup.POST("", common.JWTAuth("ADMIN"), e.createHandler)         //CREATE USERS
 		userGroup.GET("", e.getAllUsersHandler)
 		userGroup.POST("/login", middleware.BasicAuth(e.apiCfg), e.loginHandler) //GET ALL
 	}
