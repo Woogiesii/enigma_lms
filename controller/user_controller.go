@@ -1,17 +1,21 @@
 package controller
 
 import (
+	"enigma-lms/config"
+	"enigma-lms/middleware"
 	"enigma-lms/model/dto"
 	"enigma-lms/usecase"
 	"enigma-lms/utils/common"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {
-	uc usecase.UserUseCase
-	rg *gin.RouterGroup
+	uc     usecase.UserUseCase
+	rg     *gin.RouterGroup
+	apiCfg config.ApiConfig
 }
 
 func (e *UserController) getHandler(ctx *gin.Context) {
@@ -22,6 +26,25 @@ func (e *UserController) getHandler(ctx *gin.Context) {
 		return
 	}
 	common.SendCreateResponse(ctx, "OK", response)
+}
+
+func (e *UserController) loginHandler(ctx *gin.Context) {
+	var payload dto.LoginRequestDto
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+	loginData, err := e.uc.LoginUser(payload)
+	if err != nil {
+		if err.Error() == "1" {
+			common.SendErrorResponse(ctx, http.StatusForbidden, "Invalid Password")
+			return
+		}
+		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+	fmt.Println("Login Data:", loginData)
+	common.SendSingleResponse(ctx, "OK", loginData)
 }
 
 func (e *UserController) createHandler(ctx *gin.Context) {
@@ -43,28 +66,26 @@ func (e *UserController) createHandler(ctx *gin.Context) {
 func (e *UserController) getAllUsersHandler(ctx *gin.Context) {
 	users, err := e.uc.GetAllUsers()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":        http.StatusInternalServerError,
-			"description": err.Error(),
-		})
+		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":        http.StatusOK,
-		"description": "OK",
-		"data":        users,
-	})
+	common.SendCreateResponse(ctx, "OK", users)
 }
 
 func (e *UserController) Route() {
-	e.rg.GET("/users/:id", e.getHandler)
-	e.rg.POST("/users", e.createHandler)
-	e.rg.GET("/users", e.getAllUsersHandler)
+	userGroup := e.rg.Group("/users")
+	{
+		userGroup.GET("/:id", e.getHandler) // GET BY ID
+		userGroup.POST("", e.createHandler) //CREATE USERS
+		userGroup.GET("", e.getAllUsersHandler)
+		userGroup.POST("/login", middleware.BasicAuth(e.apiCfg), e.loginHandler) //GET ALL
+	}
 }
 
-func NewUserController(uc usecase.UserUseCase, rg *gin.RouterGroup) *UserController {
+func NewUserController(uc usecase.UserUseCase, rg *gin.RouterGroup, apiCfg config.ApiConfig) *UserController {
 	return &UserController{
-		uc: uc,
-		rg: rg,
+		uc:     uc,
+		rg:     rg,
+		apiCfg: apiCfg,
 	}
 }

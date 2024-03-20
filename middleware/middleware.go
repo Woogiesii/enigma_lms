@@ -1,22 +1,25 @@
 package middleware
 
 import (
+	"enigma-lms/config"
 	"enigma-lms/utils/common"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
-func BasicAuth(ctx *gin.Context) {
-	user, password, ok := ctx.Request.BasicAuth()
-	if !ok {
-		common.SendErrorResponse(ctx, http.StatusUnauthorized, "Invalid Token")
-		return
-	}
+func BasicAuth(apiConfig config.ApiConfig) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		user, password, ok := ctx.Request.BasicAuth()
+		if !ok {
+			common.SendErrorResponse(ctx, http.StatusUnauthorized, "Invalid Token")
+			return
+		}
 
-	if user != os.Getenv("CLIENT_ID") || password != os.Getenv("CLIENT_SECRET") {
-		common.SendErrorResponse(ctx, http.StatusUnauthorized, "Invalid Credential")
+		if user != apiConfig.ClientId || password != apiConfig.ClientSecret {
+			common.SendErrorResponse(ctx, http.StatusUnauthorized, "Invalid Credential")
+			return
+		}
+		ctx.Next()
 	}
-	ctx.Next()
 }

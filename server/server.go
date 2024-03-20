@@ -15,11 +15,12 @@ type Server struct {
 	ucManager manager.UseCaseManager
 	engine    *gin.Engine
 	host      string
+	apiCfg    config.ApiConfig
 }
 
 func (s *Server) setupControllers() {
 	rg := s.engine.Group("/api/v1")
-	controller.NewUserController(s.ucManager.UserUseCase(), rg).Route()
+	controller.NewUserController(s.ucManager.UserUseCase(), rg, s.apiCfg).Route()
 	controller.NewCourseController(s.ucManager.CourseUseCase(), rg).Route()
 	controller.NewEnrollmentController(s.ucManager.EnrollmentUseCase(), rg).Route()
 }
@@ -43,11 +44,12 @@ func NewServer() *Server {
 	ucManager := manager.NewUseCaseManager(repoManager)
 
 	engine := gin.Default()
-	apiHost := fmt.Sprintf(":%s", "8081")
+	apiHost := fmt.Sprintf(":%s", cfg.ApiConfig.ApiPort)
 
 	return &Server{
 		ucManager: ucManager,
 		engine:    engine,
 		host:      apiHost,
+		apiCfg:    cfg.ApiConfig,
 	}
 }

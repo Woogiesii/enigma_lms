@@ -18,6 +18,7 @@ type UserRepository interface {
 	Get(id string) (model.User, error)
 	Create(payload model.User) (model.User, error)
 	GetAll() ([]model.User, error)
+	GetByUsername(username string) (model.User, error)
 }
 
 type userRepository struct {
@@ -26,13 +27,36 @@ type userRepository struct {
 
 func (u *userRepository) Get(id string) (model.User, error) {
 	var user model.User
-	err := u.db.QueryRow(`SELECT id, first_name, last_name, email, username, role,photo, created_at, updated_at
+	err := u.db.QueryRow(`SELECT id, first_name, last_name, email, username, password, role,photo, created_at, updated_at
 	FROM users WHERE id = $1`, id).Scan(
 		&user.Id,
 		&user.FirstName,
 		&user.LastName,
 		&user.Email,
 		&user.Username,
+		&user.Password,
+		&user.Role,
+		&user.Photo,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		return model.User{}, err
+	}
+	return user, nil
+}
+
+func (u *userRepository) GetByUsername(username string) (model.User, error) {
+	var user model.User
+	err := u.db.QueryRow(`SELECT id, first_name, last_name, email, username, password, role,photo, created_at, updated_at
+	FROM users WHERE username = $1`, username).Scan(
+		&user.Id,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.Username,
+		&user.Password,
 		&user.Role,
 		&user.Photo,
 		&user.CreatedAt,
@@ -78,7 +102,7 @@ func (e *userRepository) Create(payload model.User) (model.User, error) {
 
 func (u *userRepository) GetAll() ([]model.User, error) {
 	var users []model.User
-	rows, err := u.db.Query(`SELECT id, first_name, last_name, email, username, role, photo, created_at, updated_at FROM users`)
+	rows, err := u.db.Query(`SELECT id, first_name, last_name, email, username, password, role, photo, created_at, updated_at FROM users`)
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +116,7 @@ func (u *userRepository) GetAll() ([]model.User, error) {
 			&user.LastName,
 			&user.Email,
 			&user.Username,
+			&user.Password,
 			&user.Role,
 			&user.Photo,
 			&user.CreatedAt,

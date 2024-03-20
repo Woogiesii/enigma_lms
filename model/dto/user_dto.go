@@ -10,3 +10,13 @@ type UserRequestDto struct {
 	Role      string `json:"role"`
 	Photo     string `json:"photo"`
 }
+
+type LoginRequestDto struct {
+	Username string `json:"username" binding:"required"`
+	Pass     string `json:"password" binding:"required"`
+}
+
+type LoginResponseDto struct {
+	AccesToken string `json:"accesToken"`
+	UserId     string `json:"userId"`
+}
