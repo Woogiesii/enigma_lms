@@ -8,7 +8,9 @@ import (
 )
 
 type ApiConfig struct {
-	ApiPort string
+	ApiPort      string
+	ClientId     string
+	ClientSecret string
 }
 
 type DbConfig struct {
@@ -32,7 +34,9 @@ func (c *Config) readConfig() error {
 	}
 
 	c.ApiConfig = ApiConfig{
-		ApiPort: os.Getenv("API_PORT"),
+		ApiPort:      os.Getenv("API_PORT"),
+		ClientId:     os.Getenv("CLIENT_ID"),
+		ClientSecret: os.Getenv("CLIENT_SECRET"),
 	}
 
 	c.DbConfig = DbConfig{
@@ -44,7 +48,7 @@ func (c *Config) readConfig() error {
 		Driver:   os.Getenv("DB_DRIVER"),
 	}
 
-	if c.ApiConfig.ApiPort == "" || c.DbConfig.Driver == "" || c.DbConfig.Host == "" || c.DbConfig.Name == "" || c.DbConfig.Port == "" || c.DbConfig.User == "" {
+	if c.ApiConfig.ApiPort == "" || c.ApiConfig.ClientId == "" || c.ApiConfig.ClientSecret == "" || c.DbConfig.Driver == "" || c.DbConfig.Host == "" || c.DbConfig.Name == "" || c.DbConfig.Port == "" || c.DbConfig.User == "" {
 		return errors.New("all environment Required")
 	}
 	return nil
