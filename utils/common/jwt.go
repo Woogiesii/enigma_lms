@@ -54,14 +54,15 @@ func JWTAuth(roles ...string) gin.HandlerFunc {
 			return
 		}
 
-		jwtSignatureKey := []byte(os.Getenv("SIGNATURE_KEY"))
-		tokenString := strings.Replace(authHeader, "Bearer: ", "", -1)
+		// jwtSignatureKey := []byte(os.Getenv("SIGNATURE_KEY"))
+		tokenString := strings.Replace(authHeader, "Bearer ", "", -1)
 		claims := &JwtClaim{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return jwtSignatureKey, nil
 		})
+
 		if err != nil {
-			SendErrorResponse(ctx, http.StatusInternalServerError, "Unauthorized User")
+			SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 			return
 		}
 
